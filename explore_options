@@ -10,7 +10,7 @@ my @MACHINES = ( [ qw[machines_aws.csv i2.1x] ],
 		 [ qw[machines_aws.csv i2.8x] ] );
 
 sub parse {
-  my @results = @_;
+  my ( $desired_operation, @results ) = @_;
 
   # get header line
   $results[ 0 ] =~ s{^\s+}{};
@@ -23,7 +23,6 @@ sub parse {
   die q{Please put 'options(width=10000)' into ~/.Rprofile} unless @header_fields == @expected_fields;
 
   # parse the rest of the lines
-  my %result;
   for ( @results ) {
     my @fields = split m{\s+}, $_;
     shift @fields; # get rid of line number
@@ -33,48 +32,61 @@ sub parse {
     for ( my $i = 0; $i <= $#header_fields; $i++ ) {
       $this_operation{ $header_fields[ $i ] } = $fields[ $i ];
     }
-    $result{ $this_operation{ operation } } = \%this_operation;
+
+    if ( $this_operation{ operation } eq $desired_operation ) {
+      return ( \%this_operation );
+    }
   }
 
-  return \%result;
+  die qq{Did not receive results for operation $desired_operation};
 }
 
 sub linear_scan {
-  my ( $profile_filename, $machine_type, $node_count, $data_size_GB, $field_num ) = @_;
+  my ( $profile, $machine_type, $operation, $node_count, $data_size_GB, $field_num ) = @_;
   chdir $BAD . q{/method1} or die;
-  my @results = qx{./point.R ../${profile_filename} i2.8x $machine_type $node_count $data_size_GB $field_num};
-  return parse( @results );
+  my @results = qx{./point.R ../${profile} i2.8x $machine_type $node_count $data_size_GB $field_num};
+  return parse( $operation, @results );
 }
 
 sub shuffle_all {
-  my ( $profile_filename, $machine_type, $node_count, $data_size_GB, $field_num ) = @_;
+  my ( $profile, $machine_type, $operation, $node_count, $data_size_GB, $field_num ) = @_;
   chdir $BAD . q{/method4} or die;
-  my @results = qx{./point.R ../${profile_filename} $machine_type $node_count $data_size_GB $field_num};
-  return parse( @results );
+  my @results = qx{./point.R ../${profile} $machine_type $node_count $data_size_GB $field_num};
+  return parse( $operation, @results );
+}
+
+sub annotate {
+  my ( $key, $value, @hashrefs ) = @_;
+  for my $hashref ( @hashrefs ) {
+    $hashref->{ $key } = $value;
+  }
+  return @hashrefs;
 }
 
 sub all_methods {
-  my %results;
-  $results{ linear_scan } = linear_scan( @_ );
-  $results{ shuffle_all } = shuffle_all( @_ );
-  return \%results;
+  my @results;
+
+  push @results, annotate( q{method}, q{linear_scan}, linear_scan( @_ ) );
+  push @results, annotate( q{method}, q{shuffle_all}, shuffle_all( @_ ) );
+
+  return @results;
 }
 
 sub all_machines_and_methods {
-  my %results;
+  my @results;
+
   for my $profile_machine ( @MACHINES ) {
     my ( $profile, $machine ) = @$profile_machine;
 
-    $results{ $profile . q{ } . $machine } = all_methods( $profile, $machine, @_ );
+    push @results, annotate( q{machine}, $profile . q{ } . $machine,
+			     all_methods( $profile, $machine, q{all}, @_ ) );
   }
-  return \%results;
+
+  return @results;
 }
 
-my $all_results = all_machines_and_methods( 100, 4000, 0 );
+my @all_results = all_machines_and_methods( 100, 4000, 0 );
 
-for my $machine ( keys %$all_results ) {
-  my $this_machine_results = $all_results->{ $machine };
-  for my $method ( keys %$this_machine_results ) {
-    print qq{$machine $method $this_machine_results->{ $method }{ all }{ nodes } $this_machine_results->{ $method }{ all }{ q{time.min} } $this_machine_results->{ $method }{ all }{ cost }\n};
-  }
+for my $result ( @all_results ) {
+  print qq{$result->{ machine } $result->{ method } $result->{ nodes } $result->{ q{time.min} } $result->{ cost }\n};
 }
