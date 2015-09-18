@@ -12,6 +12,10 @@ my @MACHINES = ( [ qw[machines_aws.csv i2.1x] ],
 sub parse {
   my ( $desired_operation, @results ) = @_;
 
+  if ( $results[ 0 ] =~ m{^Error} ) {
+    return;
+  }
+
   # get header line
   $results[ 0 ] =~ s{^\s+}{};
   my @header_fields = split m{\s+}, shift @results;
@@ -44,14 +48,14 @@ sub parse {
 sub linear_scan {
   my ( $profile, $machine_type, $operation, $node_count, $data_size_GB, $field_num ) = @_;
   chdir $BAD . q{/method1} or die;
-  my @results = qx{./point.R ../${profile} i2.8x $machine_type $node_count $data_size_GB $field_num};
+  my @results = qx{./point.R ../${profile} i2.8x $machine_type $node_count $data_size_GB $field_num 2>&1};
   return parse( $operation, @results );
 }
 
 sub shuffle_all {
   my ( $profile, $machine_type, $operation, $node_count, $data_size_GB, $field_num ) = @_;
   chdir $BAD . q{/method4} or die;
-  my @results = qx{./point.R ../${profile} $machine_type $node_count $data_size_GB $field_num};
+  my @results = qx{./point.R ../${profile} $machine_type $node_count $data_size_GB $field_num 2>&1};
   return parse( $operation, @results );
 }
 
@@ -85,7 +89,18 @@ sub all_machines_and_methods {
   return @results;
 }
 
-my @all_results = all_machines_and_methods( 100, 4000, 0 );
+sub search_counts {
+  my $max_machine_count = shift;
+
+  my @results;
+  for ( my $machine_count = 1; $machine_count <= $max_machine_count; $machine_count++ ) {
+    push @results, all_machines_and_methods( $machine_count, @_ );
+    print STDERR $machine_count . q{ } . ( scalar @results ) . qq{\n};
+  }
+  return @results;
+}
+
+my @all_results = search_counts( 64, 40000, 0 );
 
 for my $result ( @all_results ) {
   print qq{$result->{ machine } $result->{ method } $result->{ nodes } $result->{ q{time.min} } $result->{ cost }\n};
