@@ -1,0 +1,80 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+my $BAD = q{/home/keithw/stanford/bad/models};
+
+my @MACHINES = ( [ qw[machines_aws.csv i2.1x] ],
+		 [ qw[machines_aws.csv i2.2x] ],
+		 [ qw[machines_aws.csv i2.4x] ],
+		 [ qw[machines_aws.csv i2.8x] ] );
+
+sub parse {
+  my @results = @_;
+
+  # get header line
+  $results[ 0 ] =~ s{^\s+}{};
+  my @header_fields = split m{\s+}, shift @results;
+
+  # verify expected fields are present
+  my @expected_fields = qw{operation nodes start length
+			   time.total time.min time.hr
+			   time.disk time.net cost};
+  die q{Please put 'options(width=10000)' into ~/.Rprofile} unless @header_fields == @expected_fields;
+
+  # parse the rest of the lines
+  my %result;
+  for ( @results ) {
+    my @fields = split m{\s+}, $_;
+    shift @fields; # get rid of line number
+    die unless scalar @fields == scalar @header_fields;
+
+    my %this_operation;
+    for ( my $i = 0; $i <= $#header_fields; $i++ ) {
+      $this_operation{ $header_fields[ $i ] } = $fields[ $i ];
+    }
+    $result{ $this_operation{ operation } } = \%this_operation;
+  }
+
+  return \%result;
+}
+
+sub linear_scan {
+  my ( $profile_filename, $machine_type, $node_count, $data_size_GB, $field_num ) = @_;
+  chdir $BAD . q{/method1} or die;
+  my @results = qx{./point.R ../${profile_filename} i2.8x $machine_type $node_count $data_size_GB $field_num};
+  return parse( @results );
+}
+
+sub shuffle_all {
+  my ( $profile_filename, $machine_type, $node_count, $data_size_GB, $field_num ) = @_;
+  chdir $BAD . q{/method4} or die;
+  my @results = qx{./point.R ../${profile_filename} $machine_type $node_count $data_size_GB $field_num};
+  return parse( @results );
+}
+
+sub all_methods {
+  my %results;
+  $results{ linear_scan } = linear_scan( @_ );
+  $results{ shuffle_all } = shuffle_all( @_ );
+  return \%results;
+}
+
+sub all_machines_and_methods {
+  my %results;
+  for my $profile_machine ( @MACHINES ) {
+    my ( $profile, $machine ) = @$profile_machine;
+
+    $results{ $profile . q{ } . $machine } = all_methods( $profile, $machine, @_ );
+  }
+  return \%results;
+}
+
+my $all_results = all_machines_and_methods( 100, 4000, 0 );
+
+for my $machine ( keys %$all_results ) {
+  my $this_machine_results = $all_results->{ $machine };
+  for my $method ( keys %$this_machine_results ) {
+    print qq{$machine $method $this_machine_results->{ $method }{ all }{ nodes } $this_machine_results->{ $method }{ all }{ q{time.min} } $this_machine_results->{ $method }{ all }{ cost }\n};
+  }
+}
