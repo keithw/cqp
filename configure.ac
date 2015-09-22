@@ -10,9 +10,12 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 # Add picky CXXFLAGS
 CXX14_FLAGS="-std=c++14 -pthread"
-PICKY_CXXFLAGS="-Wall -Wpedantic -Wextra -Weffc++ -Wconversion -Wsign-conversion -Werror"
+basic_cxxflags="-Wall -Wpedantic -Wextra -Werror"
+PICKY_CXXFLAGS="$basic_cxxflags -Weffc++ -Wconversion -Wsign-conversion"
+TOLERANT_CXXFLAGS="$basic_cxxflags"
 AC_SUBST([CXX14_FLAGS])
 AC_SUBST([PICKY_CXXFLAGS])
+AC_SUBST([TOLERANT_CXXFLAGS])
 
 # Checks for programs.
 AC_PROG_CXX

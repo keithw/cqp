@@ -1,8 +1,14 @@
 AM_CPPFLAGS = $(CXX14_FLAGS) $(PANGOCAIRO_CFLAGS) $(GTKMM_CFLAGS)
 AM_CXXFLAGS = $(PICKY_CXXFLAGS)
 
-common_source =
+noinst_LIBRARIES = libfader.a
+
+common_source = fader.hh
+
+libfader_a_SOURCES = fader.cc
+libfader_a_CXXFLAGS = $(TOLERANT_CXXFLAGS)
 
 bin_PROGRAMS = cqp
+
 cqp_SOURCES = cqp.cc $(common_source)
-cqp_LDADD = $(PANGOCAIRO_LIBS) $(GTKMM_LIBS)
+cqp_LDADD = libfader.a $(PANGOCAIRO_LIBS) $(GTKMM_LIBS) -lpthread
