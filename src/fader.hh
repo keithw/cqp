@@ -15,13 +15,8 @@ class GTKFader
   std::atomic<bool> autoscale_all_ { false };
   std::atomic<bool> quit_ { false };
 
-  std::unique_ptr<std::atomic<bool>[]> remy_;
-  std::unique_ptr<std::atomic<bool>[]> aimd_;
-
-  std::mutex mutex_ {};
-
 public:
-  GTKFader( const unsigned int num_senders );
+  GTKFader();
 
   double link_rate( void ) const { return link_rate_; }
   double time_increment( void ) const { return time_increment_; }

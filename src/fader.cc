@@ -9,22 +9,6 @@ using namespace std;
 using namespace Glib;
 using namespace Gtk;
 
-class LabeledToggle
-{
-  CheckButton control_ {};
-
-public:
-  LabeledToggle( Container & parent, mutex & the_mutex, const string & text, std::atomic<bool> & variable )
-    : control_( text )
-  {
-    control_.signal_toggled().connect_notify( [&] () {
-	unique_lock<mutex> ul( the_mutex );
-	variable = control_.get_active();
-      } );
-    parent.add( control_ );
-  };
-};
-
 class LabeledScale
 {
   VBox label_and_control_ {};
@@ -52,15 +36,8 @@ public:
   }
 };
 
-GTKFader::GTKFader( const unsigned int num_senders )
-  : remy_( new atomic<bool>[ num_senders ] ),
-    aimd_( new atomic<bool>[ num_senders ] )
+GTKFader::GTKFader()
 {
-  for ( unsigned int i = 0; i < num_senders; i++ ) {
-    remy_.get()[ i ] = false;
-    aimd_.get()[ i ] = false;
-  }
-
   thread newthread( [&] () {
       RefPtr<Application> app = Application::create();
 
@@ -69,19 +46,6 @@ GTKFader::GTKFader( const unsigned int num_senders )
 
       VBox stack;
       window.add( stack );
-
-      /* AIMD and RemyCC controls */
-      HBox senders;
-      stack.pack_start( senders, PACK_SHRINK );
-
-      deque<LabeledToggle> sender_controls;
-      for ( unsigned int i = 0; i < num_senders; i++ ) {
-	sender_controls.emplace_back( senders, mutex_, "AIMD", aimd_.get()[ i ] );
-      }
-
-      for ( unsigned int i = 0; i < num_senders; i++ ) {
-	sender_controls.emplace_back( senders, mutex_, "RemyCC", remy_.get()[ i ] );
-      }
 
       /* numerical sliders */
       HBox numeric;

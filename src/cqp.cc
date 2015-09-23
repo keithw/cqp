@@ -10,14 +10,14 @@ using namespace std;
 
 int main()
 {
-  GTKFader fader { 5 };
+  GTKFader fader;
 
   while ( true ) {
-    this_thread::sleep_for( chrono::milliseconds( 500 ) );
-
     if ( fader.quit() ) {
       break;
     }
+
+    this_thread::sleep_for( chrono::milliseconds( 500 ) );
   }
 
   return EXIT_SUCCESS;
