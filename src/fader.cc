@@ -76,6 +76,7 @@ GTKFader::GTKFader()
 
       app->run( window, 0, nullptr );
       quit_ = true;
+      tracker_.mark_event();
     } );
 
   newthread.detach();

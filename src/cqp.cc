@@ -11,13 +11,14 @@ using namespace std;
 int main()
 {
   GTKFader fader;
-
+  unsigned int ui_version = 0;
+  
   while ( true ) {
+    ui_version = fader.wait_for_event( ui_version );
+
     if ( fader.quit() ) {
       break;
     }
-
-    this_thread::sleep_for( chrono::milliseconds( 500 ) );
   }
 
   return EXIT_SUCCESS;

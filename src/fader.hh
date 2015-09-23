@@ -3,7 +3,8 @@
 
 #include <memory>
 #include <atomic>
-#include <mutex>
+
+#include "tracker.hh"
 
 class GTKFader
 {
@@ -15,6 +16,8 @@ class GTKFader
   std::atomic<bool> autoscale_all_ { false };
   std::atomic<bool> quit_ { false };
 
+  Tracker tracker_;
+
 public:
   GTKFader();
 
@@ -25,6 +28,11 @@ public:
   bool autoscale( void ) { bool ret = autoscale_; autoscale_ = false; return ret; }
   bool autoscale_all( void ) { bool ret = autoscale_all_; autoscale_all_ = false; return ret; }
   bool quit( void ) const { return quit_; }
+
+  unsigned int wait_for_event( const unsigned int known_version )
+  {
+    return tracker_.wait_for_event( known_version );
+  }
 };
 
 #endif /* FADER_HH */
