@@ -2,6 +2,7 @@
 
 #include <thread>
 #include <string>
+#include <sstream>
 
 #include "fader.hh"
 
@@ -40,12 +41,42 @@ public:
 void GTKFader::recompute()
 {
   /* XXX can only be called from Gtk thread and is not reentrant */
-  double data_size_gigabytes = record_size() * num_records() / 1.e9;
-  printf( "Data size: %.1f gigabytes\n", data_size_gigabytes );
+  double data_size = record_size() * num_records();
+  string units = "bytes";
+
+  if ( data_size >= 1e12 ) {
+    data_size /= 1e12;
+    units = "terabyte";
+  } else if ( data_size >= 1e9 ) {
+    data_size /= 1e9;
+    units = "gigabyte";
+  } else if ( data_size >= 1e6 ) {
+    data_size /= 1e6;
+    units = "megabyte";
+  } else if ( data_size >= 1e3 ) {
+    data_size /= 1e3;
+    units = "kilobyte";
+  }
+
+  stringstream value;
+  value.imbue( locale( "" ) ); /* add commas as appropriate */
+  value.precision( 1 );
+  value << fixed << data_size;
+
+  string value_str = value.str();
+  string plural = "s";
+
+  if ( value_str == "1.0" ) {
+    value_str = "1";
+    plural = "";
+  }
+
+  text_->set_markup( "<b>data size:</b> " + value_str + " " + units + plural );
   tracker_.mark_event();
 }
 
 GTKFader::GTKFader()
+  : text_( make_unique<Gtk::Label>() )
 {
   thread newthread( [&] () {
       RefPtr<Application> app = Application::create();
@@ -62,14 +93,14 @@ GTKFader::GTKFader()
       stack.pack_start( numeric );
 
       LabeledScale record_size( numeric, *this, "<b>record size</b> (bytes)", 1, 10000, 1, 1, record_size_ );
-      LabeledScale num_records( numeric, *this, "<b>num records</b>", 1, 1e12, 1e7, 1, num_records_ );
+      LabeledScale num_records( numeric, *this, "<b>record count</b>", 1, 1e11, 1e7, 1, num_records_ );
 
       /* explanatory text */
-      Label text;
-      stack.pack_start( text, PACK_SHRINK, 10 );
+      stack.pack_start( *text_, PACK_SHRINK, 10 );
       
       window.show_all();
 
+      recompute();
       app->run( window, 0, nullptr );
       quit_ = true;
       tracker_.mark_event();
@@ -77,3 +108,5 @@ GTKFader::GTKFader()
 
   newthread.detach();
 }
+
+GTKFader::~GTKFader() {}

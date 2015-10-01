@@ -3,9 +3,10 @@
 
 #include <memory>
 #include <atomic>
-#include <string>
 
 #include "tracker.hh"
+
+namespace Gtk { class Label; }
 
 class GTKFader
 {
@@ -16,12 +17,15 @@ class GTKFader
 
   std::atomic<bool> quit_ { false };
 
+  std::unique_ptr<Gtk::Label> text_;
+
   Tracker tracker_;
 
   void recompute();
   
 public:
   GTKFader();
+  ~GTKFader();
 
   double record_size() const { return record_size_; }
   double num_records() const { return num_records_; }
