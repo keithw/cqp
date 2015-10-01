@@ -16,7 +16,7 @@ class LabeledScale
   VScale control_;
 
 public:
-  LabeledScale( Container & parent,
+  LabeledScale( Container & parent, GTKFader & fader,
 		const string & text, const double minval, const double maxval, const double incr,
 		const double multiplier, std::atomic<double> & variable )
     : control_( minval, maxval, incr )
@@ -27,6 +27,7 @@ public:
     control_.set_value( variable * multiplier );
     control_.signal_change_value().connect_notify( [&] ( const ScrollType &, const double & val ) {
 	variable = min( maxval, max( minval, val ) ) / multiplier;
+	fader.recompute();
       } );
 
     label_and_control_.pack_start( label_, PACK_SHRINK );
@@ -36,6 +37,14 @@ public:
   }
 };
 
+void GTKFader::recompute()
+{
+  /* XXX can only be called from Gtk thread and is not reentrant */
+  double data_size_gigabytes = record_size() * num_records() / 1.e9;
+  printf( "Data size: %.1f gigabytes\n", data_size_gigabytes );
+  tracker_.mark_event();
+}
+
 GTKFader::GTKFader()
 {
   thread newthread( [&] () {
@@ -43,7 +52,8 @@ GTKFader::GTKFader()
 
       Window window;
       window.set_default_size( 200, 400 );
-
+      window.set_title( "Cloud Query Designer" );
+      
       VBox stack;
       window.add( stack );
 
@@ -51,27 +61,13 @@ GTKFader::GTKFader()
       HBox numeric;
       stack.pack_start( numeric );
 
-      LabeledScale link_rate( numeric, "<b>Link rate</b> (Mbps)", 0.3, 300.1, 0.1, 10, link_rate_ );
-      LabeledScale buffer( numeric, "<b>Buffer cap</b> (pkts)", 0, 20000, 1, 1, buffer_size_ );
-      LabeledScale speed( numeric, "<b>Speed</b> (%)", 0, 5000, 1, 60 * 100, time_increment_ );
-      LabeledScale width( numeric, "<b>Width</b> (s)", 1, 100, 0.1, 1, horizontal_size_ );
+      LabeledScale record_size( numeric, *this, "<b>record size</b> (bytes)", 1, 10000, 1, 1, record_size_ );
+      LabeledScale num_records( numeric, *this, "<b>num records</b>", 1, 1e12, 1e7, 1, num_records_ );
 
-      /* scaling buttons */
-      HBox buttons;
-      stack.pack_start( buttons, PACK_SHRINK, 10 );
-
-      HBox spacer1, spacer2;
-      buttons.pack_start( spacer1 );
-      buttons.pack_end( spacer2 );
-
-      Button autoscaler( "Scale to packets in flight" );
-      autoscaler.signal_clicked().connect_notify( [&] () { autoscale_ = true; } );
-      buttons.pack_start( autoscaler, PACK_SHRINK, 10 );
-
-      Button superautoscaler( "Scale to full buffer + BDP" );
-      superautoscaler.signal_clicked().connect_notify( [&] () { autoscale_all_ = true; } );
-      buttons.pack_start( superautoscaler, PACK_SHRINK, 10 );
-
+      /* explanatory text */
+      Label text;
+      stack.pack_start( text, PACK_SHRINK, 10 );
+      
       window.show_all();
 
       app->run( window, 0, nullptr );
