@@ -5,12 +5,15 @@
 #include <unistd.h>
 
 #include "fader.hh"
+#include "planner.hh"
 
 using namespace std;
 
 int main()
 {
   GTKFader fader;
+  Planner planner;
+  
   unsigned int ui_version = 0;
   
   while ( true ) {
@@ -19,6 +22,12 @@ int main()
     if ( fader.quit() ) {
       break;
     }
+
+    if ( fader.record_size() != 100 ) {
+      throw runtime_error( "only record size of 100 is currently supported" );
+    }
+
+    planner.set_num_records( fader.num_records() );
   }
 
   return EXIT_SUCCESS;
