@@ -42,7 +42,7 @@ void GTKFader::recompute()
 {
   /* XXX can only be called from Gtk thread and is not reentrant */
   double data_size = record_size() * num_records();
-  string units = "bytes";
+  string units = "byte";
 
   if ( data_size >= 1e12 ) {
     data_size /= 1e12;
