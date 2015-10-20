@@ -19,16 +19,16 @@ class LabeledScale
 public:
   LabeledScale( Container & parent, GTKFader & fader,
 		const string & text, const double minval, const double maxval, const double incr,
-		const double multiplier, std::atomic<double> & variable )
+		std::atomic<double> & variable )
     : control_( minval, maxval, incr )
   {
     label_.set_markup( text );
     label_.set_padding( 10, 10 );
     control_.set_inverted();
-    control_.set_value( variable * multiplier );
+    control_.set_value( variable );
     control_.set_value_pos( POS_RIGHT );
     control_.signal_change_value().connect_notify( [&] ( const ScrollType &, const double & val ) {
-	variable = min( maxval, max( minval, val ) ) / multiplier;
+	variable = min( maxval, max( minval, val ) );
 	fader.recompute();
       } );
 
@@ -37,12 +37,13 @@ public:
 
     parent.add( label_and_control_ );
   }
+
+  void set_value( const double value ) { control_.set_value( value ); }
+  double get_value() const { return control_.get_value(); }
 };
 
-void GTKFader::recompute()
+static string human_byte_count( double data_size )
 {
-  /* XXX can only be called from Gtk thread and is not reentrant */
-  double data_size = record_size() * num_records();
   string units = "byte";
 
   if ( data_size >= 1e12 ) {
@@ -72,7 +73,33 @@ void GTKFader::recompute()
     plural = "";
   }
 
-  text_->set_markup( "<b>data size:</b> " + value_str + " " + units + plural );
+  return value_str + " " + units + plural;
+}
+
+void GTKFader::recompute()
+{
+  /* XXX can only be called from Gtk thread and is not reentrant */
+
+  /* reconcile sliders */
+  while ( range_end_ < range_start_ ) {
+    range_end_ = range_end_ + 1;
+    range_start_ = range_start_ - 1;
+
+    range_end_slider_->set_value( range_end_ );
+    range_start_slider_->set_value( range_start_ );
+
+    range_end_ = range_end_slider_->get_value();
+    range_start_ = range_start_slider_->get_value();
+  }
+
+  /* calculate total data size */
+  const string data_size = human_byte_count( record_size() * num_records() );
+  const string result_size = human_byte_count( record_size() * num_records() * ( range_end_ - range_start_ ) / 100.0 );
+
+  text_->set_markup( "<span size='large'><span color='darkred'><b>data size:</b> " + data_size + "</span>"
+		     + ", <span color='darkblue'><b>result size:</b> " + result_size + "</span></span>" );
+  
+  /* increment version number */
   tracker_.mark_event();
 }
 
@@ -83,7 +110,7 @@ GTKFader::GTKFader()
 
       Window window;
       window.set_default_size( 200, 400 );
-      window.set_title( "Cloud Query Designer" );
+      window.set_title( "DrCloud: The Cluster Job Design Assistant" );
       
       VBox stack;
       window.add( stack );
@@ -93,9 +120,11 @@ GTKFader::GTKFader()
       stack.pack_start( numeric );
 
       text_ = make_unique<Gtk::Label>();
-      record_size_slider_ = make_unique<LabeledScale>( numeric, *this, "<b>record size</b> (bytes)", 1, 200, 1, 1, record_size_ );
-      num_records_slider_ = make_unique<LabeledScale>( numeric, *this, "<b>record count</b>", 1, 1e11, 1e7, 1, num_records_ );
-
+      record_size_slider_ = make_unique<LabeledScale>( numeric, *this, "<b>record size</b> (bytes)", 1, 200, 1, record_size_ );
+      num_records_slider_ = make_unique<LabeledScale>( numeric, *this, "<b>record count</b>", 1, 1e11, 1e7, num_records_ );
+      range_start_slider_ = make_unique<LabeledScale>( numeric, *this, "<b>range start</b> (%)", 0, 100.9, 1, range_start_ );
+      range_end_slider_   = make_unique<LabeledScale>( numeric, *this, "<b>range end</b> (%)",   0, 100.9, 1, range_end_ );
+      
       /* explanatory text */
       stack.pack_start( *text_, PACK_SHRINK, 10 );
       

@@ -15,6 +15,8 @@ class GTKFader
 
   std::atomic<double> record_size_ { 100 };
   std::atomic<double> num_records_ { 10000 };
+  std::atomic<double> range_start_ { 0 };
+  std::atomic<double> range_end_ { 100 };
 
   std::atomic<bool> quit_ { false };
 
@@ -22,6 +24,8 @@ class GTKFader
 
   std::unique_ptr<LabeledScale> record_size_slider_;
   std::unique_ptr<LabeledScale> num_records_slider_;
+  std::unique_ptr<LabeledScale> range_start_slider_;
+  std::unique_ptr<LabeledScale> range_end_slider_;  
   
   Tracker tracker_;
 
