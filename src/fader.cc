@@ -113,6 +113,26 @@ GTKFader::GTKFader()
       VBox stack;
       window.add( stack );
 
+      /* checkboxes */
+      Image expected { "images/stock_weather-few-clouds.svg" };
+      Image pessimistic { "images/stock_weather-showers.svg" };
+      CheckButton pessimistic_mode {  "  using average-case model of cloud performance" };
+      pessimistic_mode.set_image( expected );
+      pessimistic_mode.set_always_show_image();
+      pessimistic_mode.signal_toggled().connect_notify( [&] () {
+	  state_.pessimistic = pessimistic_mode.get_active();
+	  if ( state_.pessimistic ) {
+	    pessimistic_mode.set_label( "  using pessimistic model of cloud performance" );
+	    pessimistic_mode.set_image( pessimistic );
+	  } else {
+	    pessimistic_mode.set_label( "  using average-case model of cloud performance" );
+	    pessimistic_mode.set_image( expected );
+	  }
+	  recompute();
+	} );
+
+      stack.pack_start( pessimistic_mode, PACK_SHRINK, 10 );
+	  
       /* numerical sliders */
       HBox numeric;
       stack.pack_start( numeric );
@@ -122,7 +142,7 @@ GTKFader::GTKFader()
       num_records_slider_ = make_unique<LabeledScale>( numeric, *this, "<b>record count</b>", 1, 1e11, 1e7, state_.num_records );
       range_start_slider_ = make_unique<LabeledScale>( numeric, *this, "<b>range start</b> (%)", 0, 100.9, 1, state_.range_start );
       range_end_slider_   = make_unique<LabeledScale>( numeric, *this, "<b>range end</b> (%)",   0, 100.9, 1, state_.range_end );
-      
+
       /* explanatory text */
       stack.pack_start( *text_, PACK_SHRINK, 10 );
       
