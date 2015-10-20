@@ -23,10 +23,6 @@ int main()
       break;
     }
     
-    if ( fader.state().record_size != 100 ) {
-      throw runtime_error( "only record size of 100 is currently supported" );
-    }
-
     planner.set_input( fader.state() );
   }
 
