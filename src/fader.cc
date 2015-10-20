@@ -26,6 +26,7 @@ public:
     label_.set_padding( 10, 10 );
     control_.set_inverted();
     control_.set_value( variable * multiplier );
+    control_.set_value_pos( POS_RIGHT );
     control_.signal_change_value().connect_notify( [&] ( const ScrollType &, const double & val ) {
 	variable = min( maxval, max( minval, val ) ) / multiplier;
 	fader.recompute();
@@ -76,7 +77,6 @@ void GTKFader::recompute()
 }
 
 GTKFader::GTKFader()
-  : text_( make_unique<Gtk::Label>() )
 {
   thread newthread( [&] () {
       RefPtr<Application> app = Application::create();
@@ -92,8 +92,9 @@ GTKFader::GTKFader()
       HBox numeric;
       stack.pack_start( numeric );
 
-      LabeledScale record_size( numeric, *this, "<b>record size</b> (bytes)", 1, 10000, 1, 1, record_size_ );
-      LabeledScale num_records( numeric, *this, "<b>record count</b>", 1, 1e11, 1e7, 1, num_records_ );
+      text_ = make_unique<Gtk::Label>();
+      record_size_slider_ = make_unique<LabeledScale>( numeric, *this, "<b>record size</b> (bytes)", 1, 200, 1, 1, record_size_ );
+      num_records_slider_ = make_unique<LabeledScale>( numeric, *this, "<b>record count</b>", 1, 1e11, 1e7, 1, num_records_ );
 
       /* explanatory text */
       stack.pack_start( *text_, PACK_SHRINK, 10 );

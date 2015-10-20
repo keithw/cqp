@@ -6,6 +6,7 @@
 
 #include "tracker.hh"
 
+class LabeledScale;
 namespace Gtk { class Label; }
 
 class GTKFader
@@ -19,6 +20,9 @@ class GTKFader
 
   std::unique_ptr<Gtk::Label> text_;
 
+  std::unique_ptr<LabeledScale> record_size_slider_;
+  std::unique_ptr<LabeledScale> num_records_slider_;
+  
   Tracker tracker_;
 
   void recompute();
