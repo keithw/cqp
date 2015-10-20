@@ -39,5 +39,7 @@ void Planner::set_input( const Input & input )
     const string family = input.pessimistic ? machine.pessimistic_family : machine.family;
 
     cout << "pushd models/models/method1; ./point.R --machines ../" << family << " --client " << machine.best_client << " --node " << machine.type << " --cluster-points " << lrint( input.max_machine_count ) << " --data " << data_size_GB << " --range-start " << read_position_start << " --range-size " << read_size << "; popd" << endl;
+    cout << "pushd models/models/method2; ./point.R --machines ../" << family << " --client " << machine.best_client << " --node " << machine.type << " --cluster-points " << lrint( input.max_machine_count ) << " --data " << data_size_GB << " --range-start " << read_position_start << " --range-size " << read_size << "; popd" << endl;
+    cout << "pushd models/models/method4; ./point.R --machines ../" << family << " --client " << machine.best_client << " --node " << machine.type << " --cluster-points " << lrint( input.max_machine_count ) << " --data " << data_size_GB << " --range-start " << read_position_start << " --range-size " << read_size << "; popd" << endl;
   }
 }
