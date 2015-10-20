@@ -7,7 +7,7 @@ using namespace std;
 Planner::Planner()
 {}
 
-void Planner::set_num_records( const double num_records )
+void Planner::set_input( const Input & input )
 {
-  cout << num_records << " records" << endl;
+  cout << input.num_records << " records" << endl;
 }

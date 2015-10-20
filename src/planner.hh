@@ -1,12 +1,14 @@
 #ifndef PLANNER_HH
 #define PLANNER_HH
 
+#include "input.hh"
+
 class Planner
 {
 public:
   Planner();
 
-  void set_num_records( const double num_records );
+  void set_input( const Input & input );
 };
 
 #endif /* PLANNER_HH */

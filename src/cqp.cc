@@ -22,12 +22,12 @@ int main()
     if ( fader.quit() ) {
       break;
     }
-
-    if ( fader.record_size() != 100 ) {
+    
+    if ( fader.state().record_size != 100 ) {
       throw runtime_error( "only record size of 100 is currently supported" );
     }
 
-    planner.set_num_records( fader.num_records() );
+    planner.set_input( fader.state() );
   }
 
   return EXIT_SUCCESS;
