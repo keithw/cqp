@@ -11,29 +11,33 @@ Planner::Planner()
 
 void Planner::set_input( const Input & input )
 {
-  if ( input.record_size != 100 ) {
+  const long int num_records_int = lrint( input.num_records );
+  const long int record_size_int = lrint( input.record_size );
+  if ( record_size_int != 100 ) {
     throw runtime_error( "only record size of 100 is currently supported" );
   }
-
+  
   const double data_size_GB = input.record_size * input.num_records / 1e9;
-  const long int read_position_start = lrint( input.num_records * input.range_start / 100.0 );
-  const long int read_position_end = lrint( input.num_records * input.range_end / 100.0 );
-  const long int read_size = read_position_end - read_position_start;
+  const long int read_position_start = lrint(input.num_records * input.range_start / 100.0);
+  const long int read_position_end = lrint(input.num_records * input.range_end / 100.0);
+  const long int read_size = min( num_records_int, read_position_end - read_position_start );
   
   /* validate */
   if ( data_size_GB <= 0 ) {
     throw runtime_error( "no data" );
   }
 
-  if ( read_position_start < 0 or read_position_start > input.num_records ) {
+  if ( read_position_start < 0 or read_position_start > num_records_int ) {
     throw runtime_error( "invalid read_position_start" );
   }
 
-  if ( read_size < 0 or read_size > input.num_records ) {
-    throw runtime_error( "invalid read_position_end" );
+  if ( read_size < 0 or read_size > num_records_int ) {
+    throw runtime_error( "invalid read_size" );
   }
 
   for ( const Machine & machine : DrCloudMachines ) {
-    cout << "./point.R --machines ../" << machine.family << "--client i2.8x --node " << machine.type << " --cluster-points 128 --data " << input.num_records << " --range-start " << read_position_start << " --range-size " << read_size << endl;
+    const string family = input.pessimistic ? machine.pessimistic_family : machine.family;
+
+    cout << "pushd models/models/method1; ./point.R --machines ../" << family << " --client " << machine.best_client << " --node " << machine.type << " --cluster-points 256 --data " << data_size_GB << " --range-start " << read_position_start << " --range-size " << read_size << "; popd" << endl;
   }
 }
