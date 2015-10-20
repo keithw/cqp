@@ -23,7 +23,8 @@ class GTKFader
   std::unique_ptr<LabeledScale> num_records_slider_;
   std::unique_ptr<LabeledScale> range_start_slider_;
   std::unique_ptr<LabeledScale> range_end_slider_;  
-  
+  std::unique_ptr<LabeledScale> max_machine_count_slider_;
+
   Tracker tracker_;
 
   void recompute();

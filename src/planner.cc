@@ -38,6 +38,6 @@ void Planner::set_input( const Input & input )
   for ( const Machine & machine : DrCloudMachines ) {
     const string family = input.pessimistic ? machine.pessimistic_family : machine.family;
 
-    cout << "pushd models/models/method1; ./point.R --machines ../" << family << " --client " << machine.best_client << " --node " << machine.type << " --cluster-points 256 --data " << data_size_GB << " --range-start " << read_position_start << " --range-size " << read_size << "; popd" << endl;
+    cout << "pushd models/models/method1; ./point.R --machines ../" << family << " --client " << machine.best_client << " --node " << machine.type << " --cluster-points " << lrint( input.max_machine_count ) << " --data " << data_size_GB << " --range-start " << read_position_start << " --range-size " << read_size << "; popd" << endl;
   }
 }
