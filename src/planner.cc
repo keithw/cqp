@@ -3,6 +3,7 @@
 
 #include "planner.hh"
 #include "machines.hh"
+#include "model_runner.hh"
 
 using namespace std;
 

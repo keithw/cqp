@@ -3,7 +3,8 @@ AM_CXXFLAGS = $(PICKY_CXXFLAGS)
 
 noinst_LIBRARIES = libfader.a
 
-common_source = fader.hh tracker.hh tracker.cc input.hh planner.hh planner.cc machines.hh
+common_source = fader.hh tracker.hh tracker.cc input.hh planner.hh planner.cc machines.hh \
+	model_runner.hh model_runner.cc
 
 libfader_a_SOURCES = fader.cc
 libfader_a_CXXFLAGS = $(TOLERANT_CXXFLAGS)
