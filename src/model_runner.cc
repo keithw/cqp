@@ -130,8 +130,9 @@ ModelRunner::Result::Result( const unsigned int s_method,
      machine_type( s_machine_type ),
      operation( fields.at( operation_field( method ) ) ),
      machine_count( atoi( fields.at( machine_field( method ) ).c_str() ) ),
-     time_seconds( atoi( fields.at( time_field( method ) ).c_str() ) ),
-     cost_dollars( atof( fields.at( cost_field( method ) ).c_str() ) )
+     time_seconds( atof( fields.at( time_field( method ) ).c_str() ) ),
+     cost_dollars( atof( fields.at( cost_field( method ) ).c_str() ) ),
+     line( join( fields ) )
 {
   if ( machine_count < 1 or time_seconds < 0 or cost_dollars < 0 ) {
     throw runtime_error( "invalid result" );

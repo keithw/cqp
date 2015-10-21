@@ -16,9 +16,10 @@ public:
     std::string machine_type;
     std::string operation;
     int machine_count;
-    int time_seconds;
+    double time_seconds;
     double cost_dollars;
-
+    std::string line;
+    
     Result( const unsigned int s_method,
 	    const std::string & machine_type,
 	    const std::vector<std::string> & fields );
