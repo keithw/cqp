@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <thread>
 #include <chrono>
+#include <iostream>
 
 #include <unistd.h>
 
@@ -22,8 +23,10 @@ int main()
     if ( fader.quit() ) {
       break;
     }
-    
+
+    cerr << "updating... ";
     planner.set_input( fader.state() );
+    cerr << "done." << endl;
   }
 
   return EXIT_SUCCESS;

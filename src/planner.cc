@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cmath>
+#include <list>
 
 #include "planner.hh"
 #include "machines.hh"
@@ -36,7 +37,7 @@ void Planner::set_input( const Input & input )
     throw runtime_error( "invalid read_size" );
   }
 
-  vector<ModelRunner> models;
+  list<ModelRunner> models;
   
   for ( const Machine & machine : DrCloudMachines ) {
     const string family = input.pessimistic ? machine.pessimistic_family : machine.family;
