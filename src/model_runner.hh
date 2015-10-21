@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <string>
-#include <thread>
+#include <memory>
 
 #include <ext/stdio_filebuf.h>
 
@@ -13,9 +13,23 @@ public:
   struct Result
   {
     unsigned int method;
-    unsigned int machine_count;
-    unsigned int time_seconds;
+    std::string operation;
+    int machine_count;
+    int time_seconds;
     double cost_dollars;
+
+    Result( const unsigned int s_method,
+	    const std::vector<std::string> & fields );
+    
+    Result( const unsigned int s_method,
+	    const std::string & line );
+
+    static void check_header( const unsigned int method, const std::string & line );
+
+    static size_t operation_field( const unsigned int method );
+    static size_t machine_field( const unsigned int method );
+    static size_t time_field( const unsigned int method );
+    static size_t cost_field( const unsigned int method );
   };
 
 private:
@@ -35,14 +49,8 @@ private:
     std::istream & stream() { return cpp_stream_; }
   };
   
-  long int max_machine_count_;
-  long int read_position_start_;
-  long int read_size_;
-
   std::vector<Result> results_ {};
   POpen output_;
-  
-  std::thread running_thread_;
   
 public:
   ModelRunner( const unsigned int method,
@@ -54,9 +62,7 @@ public:
 	       const long int read_position_start,
 	       const long int read_size );
 
-  void wait_until_finished();
-  
-  const std::vector<Result> results() const { return results_; }
+  const std::vector<Result> & results() const { return results_; }
 };
 
 #endif /* MODEL_RUNNER_HH */

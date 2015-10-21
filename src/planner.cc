@@ -37,25 +37,16 @@ void Planner::set_input( const Input & input )
     throw runtime_error( "invalid read_size" );
   }
 
-  list<ModelRunner> models;
+  vector<ModelRunner::Result> results;
   
   for ( const Machine & machine : DrCloudMachines ) {
     const string family = input.pessimistic ? machine.pessimistic_family : machine.family;
 
-    models.emplace_back( 1, family, machine.best_client, machine.type,
+    for ( const int method : { 1, 2, 4 } ) {
+      ModelRunner model( static_cast<unsigned>( method ), family, machine.best_client, machine.type,
 			 lrint( input.max_machine_count ),
 			 data_size_GB, read_position_start, read_size );
-
-    models.emplace_back( 2, family, machine.best_client, machine.type,
-			 lrint( input.max_machine_count ),
-			 data_size_GB, read_position_start, read_size );
-
-    models.emplace_back( 4, family, machine.best_client, machine.type,
-			 lrint( input.max_machine_count ),
-			 data_size_GB, read_position_start, read_size );
-  }
-
-  for ( auto & x : models ) {
-    x.wait_until_finished();
+      results.insert( results.end(), model.results().begin(), model.results().end() );
+    }
   }
 }
