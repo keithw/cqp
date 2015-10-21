@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <thread>
 
 class ModelRunner
 {
@@ -15,20 +16,23 @@ public:
   };
 
 private:
-  unsigned int max_machine_count_;
-  unsigned int read_position_start_;
-  unsigned int read_size_;
+  long int max_machine_count_;
+  long int read_position_start_;
+  long int read_size_;
+  std::exception_ptr thread_exception_ {};
+  std::thread running_thread_;
 
   std::vector<Result> results_ {};
-  
+
+public:
   ModelRunner( const unsigned int method,
 	       const std::string & profile_filename,
 	       const std::string & client,
 	       const std::string & node,
-	       const unsigned int max_machine_count,
+	       const long int max_machine_count,
 	       const double data_size_GB,
-	       const unsigned int read_position_start,
-	       const unsigned int read_size );
+	       const long int read_position_start,
+	       const long int read_size );
 
   void wait_until_finished();
   
