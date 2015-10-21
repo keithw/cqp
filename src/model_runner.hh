@@ -13,15 +13,18 @@ public:
   struct Result
   {
     unsigned int method;
+    std::string machine_type;
     std::string operation;
     int machine_count;
     int time_seconds;
     double cost_dollars;
 
     Result( const unsigned int s_method,
+	    const std::string & machine_type,
 	    const std::vector<std::string> & fields );
     
     Result( const unsigned int s_method,
+	    const std::string & machine_type,
 	    const std::string & line );
 
     static void check_header( const unsigned int method, const std::string & line );
@@ -30,6 +33,10 @@ public:
     static size_t machine_field( const unsigned int method );
     static size_t time_field( const unsigned int method );
     static size_t cost_field( const unsigned int method );
+
+    double bang() const { return 1.0 / ( cost_dollars * time_seconds ); }
+
+    std::string str() const;
   };
 
 private:

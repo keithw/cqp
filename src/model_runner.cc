@@ -72,7 +72,7 @@ ModelRunner::ModelRunner( const unsigned int method,
       Result::check_header( method, line );
       first_line = false;
     } else {
-      results_.emplace_back( method, line );
+      results_.emplace_back( method, node, line );
     }
   }
 }
@@ -117,12 +117,17 @@ static vector<string> split_and_remove( const string & line )
   return fields;
 }
 
-ModelRunner::Result::Result( const unsigned int s_method, const string & line )
-  : Result( s_method, split_and_remove( line ) )
+ModelRunner::Result::Result( const unsigned int s_method,
+			     const string & s_machine_type,
+			     const string & line )
+  : Result( s_method, s_machine_type, split_and_remove( line ) )
 {}
 
-ModelRunner::Result::Result( const unsigned int s_method, const vector<string> & fields )
+ModelRunner::Result::Result( const unsigned int s_method,
+			     const string & s_machine_type,
+			     const vector<string> & fields )
   :  method( s_method ),
+     machine_type( s_machine_type ),
      operation( fields.at( operation_field( method ) ) ),
      machine_count( atoi( fields.at( machine_field( method ) ).c_str() ) ),
      time_seconds( atoi( fields.at( time_field( method ) ).c_str() ) ),

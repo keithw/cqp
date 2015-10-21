@@ -27,6 +27,7 @@ int main()
     cerr << "updating... ";
     planner.set_input( fader.state() );
     cerr << "done." << endl;
+    planner.analyze();
   }
 
   return EXIT_SUCCESS;

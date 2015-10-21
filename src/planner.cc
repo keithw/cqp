@@ -37,7 +37,7 @@ void Planner::set_input( const Input & input )
     throw runtime_error( "invalid read_size" );
   }
 
-  vector<ModelRunner::Result> results;
+  results_.clear();
   
   for ( const Machine & machine : DrCloudMachines ) {
     const string family = input.pessimistic ? machine.pessimistic_family : machine.family;
@@ -46,7 +46,44 @@ void Planner::set_input( const Input & input )
       ModelRunner model( static_cast<unsigned>( method ), family, machine.best_client, machine.type,
 			 lrint( input.max_machine_count ),
 			 data_size_GB, read_position_start, read_size );
-      results.insert( results.end(), model.results().begin(), model.results().end() );
+      results_.insert( results_.end(), model.results().begin(), model.results().end() );
     }
   }
+}
+
+void Planner::analyze() const
+{
+  if ( results_.empty() ) {
+    cerr << "No strategies available." << endl;
+    return;
+  }
+  
+  /* find cheapest, fastest, sweetspot */
+  ModelRunner::Result cheapest = results_.front();
+  ModelRunner::Result fastest  = results_.front();
+  ModelRunner::Result mostbang = results_.front();
+
+  for ( const auto & x : results_ ) {
+    if ( x.cost_dollars < cheapest.cost_dollars ) {
+      cheapest = x;
+    }
+
+    if ( x.time_seconds < fastest.time_seconds ) {
+      fastest = x;
+    }
+
+    if ( x.bang() > mostbang.bang() ) {
+      mostbang = x;
+    }
+  }
+
+  cout << "Cheapest option: " << cheapest.str() << endl;
+  cout << "Fastest option: " << fastest.str() << endl;
+  cout << "Most bang for the buck: " << mostbang.str() << endl;
+}
+
+string ModelRunner::Result::str() const
+{
+  string ezmethod = method == 1 ? "LinearScan" : method == 2 ? "LocalIndex" : "ShuffleAll";
+  return ezmethod + ", " + to_string( machine_count ) + " " + machine_type + " => " + to_string( time_seconds ) + " secs for $" + to_string( cost_dollars );
 }
