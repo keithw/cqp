@@ -10,6 +10,7 @@ class ModelRunner
 public:
   struct Result
   {
+    unsigned int method;
     unsigned int machine_count;
     unsigned int time_seconds;
     double cost_dollars;

@@ -36,18 +36,25 @@ void Planner::set_input( const Input & input )
     throw runtime_error( "invalid read_size" );
   }
 
+  vector<ModelRunner> models;
+  
   for ( const Machine & machine : DrCloudMachines ) {
     const string family = input.pessimistic ? machine.pessimistic_family : machine.family;
 
-    ModelRunner linear( 1, family, machine.best_client, machine.type, lrint( input.max_machine_count ),
-			data_size_GB, read_position_start, read_size );
+    models.emplace_back( 1, family, machine.best_client, machine.type,
+			 lrint( input.max_machine_count ),
+			 data_size_GB, read_position_start, read_size );
 
-    linear.wait_until_finished();
+    models.emplace_back( 2, family, machine.best_client, machine.type,
+			 lrint( input.max_machine_count ),
+			 data_size_GB, read_position_start, read_size );
 
-      /*
-    cout << "pushd models/models/method1; ./point.R --machines ../" << family << " --client " << machine.best_client << " --node " << machine.type << " --cluster-points " << lrint( input.max_machine_count ) << " --data " << data_size_GB << " --range-start " << read_position_start << " --range-size " << read_size << "; popd" << endl;
-    cout << "pushd models/models/method2; ./point.R --machines ../" << family << " --client " << machine.best_client << " --node " << machine.type << " --cluster-points " << lrint( input.max_machine_count ) << " --data " << data_size_GB << " --range-start " << read_position_start << " --range-size " << read_size << "; popd" << endl;
-    cout << "pushd models/models/method4; ./point.R --machines ../" << family << " --client " << machine.best_client << " --node " << machine.type << " --cluster-points " << lrint( input.max_machine_count ) << " --data " << data_size_GB << " --range-start " << read_position_start << " --range-size " << read_size << "; popd" << endl;
-      */
+    models.emplace_back( 4, family, machine.best_client, machine.type,
+			 lrint( input.max_machine_count ),
+			 data_size_GB, read_position_start, read_size );
+  }
+
+  for ( auto & x : models ) {
+    x.wait_until_finished();
   }
 }
