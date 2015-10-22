@@ -14,6 +14,7 @@ public:
 
   void set_input( const Input & input );
   void analyze() const;
+  void graph() const;
 };
 
 #endif /* PLANNER_HH */

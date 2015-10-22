@@ -43,7 +43,8 @@ inline void print_exception( const std::exception & e, std::ostream & output = s
 }
 
 /* error-checking wrapper for most syscalls */
-inline int SystemCall( const char * s_attempt, const int return_value )
+template <typename ValueType>
+inline ValueType SystemCall( const char * s_attempt, const ValueType return_value )
 {
   if ( return_value >= 0 ) {
     return return_value;
@@ -52,7 +53,8 @@ inline int SystemCall( const char * s_attempt, const int return_value )
   throw unix_error( s_attempt );
 }
 
-inline int SystemCall( const std::string & s_attempt, const int return_value )
+template <typename ValueType>
+inline ValueType SystemCall( const std::string & s_attempt, const ValueType return_value )
 {
     return SystemCall( s_attempt.c_str(), return_value );
 }

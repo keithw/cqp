@@ -28,6 +28,7 @@ int main()
     planner.set_input( fader.state() );
     cerr << "done." << endl;
     planner.analyze();
+    planner.graph();
   }
 
   return EXIT_SUCCESS;

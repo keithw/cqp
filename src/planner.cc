@@ -5,6 +5,8 @@
 #include "planner.hh"
 #include "machines.hh"
 #include "model_runner.hh"
+#include "temp_file.hh"
+#include "exception.hh"
 
 using namespace std;
 
@@ -110,4 +112,31 @@ string ModelRunner::Result::str() const
   string human_readable = human_readable_machine_name( machine_type );
   string ezmethod = method == 1 ? "LinearScan" : method == 2 ? "LocalIndex" : "ShuffleAll";
   return ezmethod + ", " + to_string( machine_count ) + " " + human_readable + " => " + to_string( time_seconds ) + " secs for $" + to_string( cost_dollars );
+}
+
+void Planner::graph() const
+{
+  if ( results_.empty() ) {
+    cerr << "No strategies available." << endl;
+    return;
+  }
+
+  TempFile data_to_plot( "/tmp/drcloud_plot" );
+
+  for ( const auto & x : results_ ) {
+    const string result_line = to_string( x.time_seconds ) + " " + to_string( x.cost_dollars ) + "\n";
+    data_to_plot.write( result_line );
+  }
+
+  TempFile gnuplot_script( "/tmp/drcloud_gnuplot" );
+  gnuplot_script.write( "set xlabel 'time (s)'\n");
+  gnuplot_script.write( "set ylabel 'cost ($)'\n");
+  gnuplot_script.write( "set logscale xy\n" );
+  
+  const string script_line = "plot \"" + data_to_plot.name() + "\" using 1:2";
+  gnuplot_script.write( script_line );
+
+  const string command = "gnuplot --persist " + gnuplot_script.name();
+  
+  SystemCall( "system", system( command.c_str() ) );
 }
