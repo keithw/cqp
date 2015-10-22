@@ -14,18 +14,20 @@ public:
   {
     unsigned int method;
     std::string machine_type;
+    std::string command_line;
     std::string operation;
     int machine_count;
     double time_seconds;
     double cost_dollars;
-    std::string line;
     
     Result( const unsigned int s_method,
 	    const std::string & machine_type,
+	    const std::string & command_line,
 	    const std::vector<std::string> & fields );
     
     Result( const unsigned int s_method,
 	    const std::string & machine_type,
+	    const std::string & command_line,
 	    const std::string & line );
 
     static void check_header( const unsigned int method, const std::string & line );
@@ -60,6 +62,7 @@ private:
   const unsigned int method_;
   const std::string node_;
   std::vector<Result> results_ {};
+  std::string command_line_;
   POpen output_;
   
 public:
@@ -74,6 +77,7 @@ public:
 
   void collect_output();
 
+  const std::string & command_line() const { return command_line_; }
   const std::vector<Result> & results() const { return results_; }
 };
 

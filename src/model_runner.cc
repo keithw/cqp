@@ -52,7 +52,7 @@ ModelRunner::ModelRunner( const unsigned int method,
 			  const long int read_size )
   : method_( method ),
     node_( node ),
-    output_( join( { "cd models/models/method" + to_string( method ),
+    command_line_( join( { "cd models/models/method" + to_string( method ),
 	    "&&",
 	    "./point.R",
 	    "--machines", "../" + profile_filename,
@@ -61,7 +61,8 @@ ModelRunner::ModelRunner( const unsigned int method,
 	    "--cluster-points", to_string( max_machine_count ),
 	    "--data", to_string( data_size_GB ),
 	    "--range-start", to_string( read_position_start ),
-	    "--range-size", to_string( read_size ) } ) )
+	    "--range-size", to_string( read_size ) } ) ),
+    output_( command_line_ )
 {
   if ( (method != 1) and (method != 2) and (method != 4) ) {
     throw runtime_error( string( "unknown method " ) + to_string( method ) );
@@ -77,7 +78,7 @@ void ModelRunner::collect_output()
       Result::check_header( method_, line );
       first_line = false;
     } else {
-      results_.emplace_back( method_, node_, line );
+      results_.emplace_back( method_, node_, command_line_, line );
     }
   }
 }
@@ -124,20 +125,22 @@ static vector<string> split_and_remove( const string & line )
 
 ModelRunner::Result::Result( const unsigned int s_method,
 			     const string & s_machine_type,
+			     const string & s_command_line,
 			     const string & line )
-  : Result( s_method, s_machine_type, split_and_remove( line ) )
+  : Result( s_method, s_machine_type, s_command_line, split_and_remove( line ) )
 {}
 
 ModelRunner::Result::Result( const unsigned int s_method,
 			     const string & s_machine_type,
+			     const string & s_command_line,
 			     const vector<string> & fields )
   :  method( s_method ),
      machine_type( s_machine_type ),
+     command_line( s_command_line ),
      operation( fields.at( operation_field( method ) ) ),
      machine_count( atoi( fields.at( machine_field( method ) ).c_str() ) ),
      time_seconds( atof( fields.at( time_field( method ) ).c_str() ) ),
-     cost_dollars( atof( fields.at( cost_field( method ) ).c_str() ) ),
-     line( join( fields ) )
+     cost_dollars( atof( fields.at( cost_field( method ) ).c_str() ) )
 {
   if ( machine_count < 1 or time_seconds < 0 or cost_dollars < 0 ) {
     throw runtime_error( "invalid result" );
