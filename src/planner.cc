@@ -121,20 +121,27 @@ void Planner::graph() const
     return;
   }
 
-  TempFile data_to_plot( "/tmp/drcloud_plot" );
+  UniqueFile data_to_plot( "/tmp/drcloud_plot" );
 
-  for ( const auto & x : results_ ) {
-    const string result_line = to_string( x.time_seconds ) + " " + to_string( x.cost_dollars ) + "\n";
-    data_to_plot.write( result_line );
+  for ( const auto method : { 1, 2, 4 } ) {
+    for ( const auto & x : results_ ) {
+      if ( static_cast<int>( x.method ) == method ) {
+	const string result_line = to_string( x.time_seconds ) + " " + to_string( x.cost_dollars ) + "\n";
+	data_to_plot.write( result_line );
+      }
+    }
+
+    data_to_plot.write( "\n\n" );
   }
 
-  TempFile gnuplot_script( "/tmp/drcloud_gnuplot" );
+  UniqueFile gnuplot_script( "/tmp/drcloud_gnuplot" );
   gnuplot_script.write( "set xlabel 'time (s)'\n");
   gnuplot_script.write( "set ylabel 'cost ($)'\n");
   gnuplot_script.write( "set logscale xy\n" );
   
-  const string script_line = "plot \"" + data_to_plot.name() + "\" using 1:2";
-  gnuplot_script.write( script_line );
+  gnuplot_script.write( "plot \"" + data_to_plot.name() + "\" index 0 using 1:2 title \"LinearScan\", " );
+  gnuplot_script.write( "\"\" index 1 using 1:2 title \"LocalIndex\", " );
+  gnuplot_script.write( "\"\" index 2 using 1:2 title \"ShuffleAll\"\n" );
 
   const string command = "gnuplot --persist " + gnuplot_script.name();
   
