@@ -94,8 +94,20 @@ void Planner::analyze() const
   cout << "Most bang for the buck: " << mostbang.str() << endl;
 }
 
+static string human_readable_machine_name( const string & machine_type )
+{
+  for ( const auto & x : DrCloudMachines ) {
+    if ( x.type == machine_type ) {
+      return x.nice_name;
+    }
+  }
+
+  throw runtime_error( string( "did not find nice name for " ) + machine_type );
+}
+
 string ModelRunner::Result::str() const
 {
+  string human_readable = human_readable_machine_name( machine_type );
   string ezmethod = method == 1 ? "LinearScan" : method == 2 ? "LocalIndex" : "ShuffleAll";
-  return ezmethod + ", " + to_string( machine_count ) + " " + machine_type + " => " + to_string( time_seconds ) + " secs for $" + to_string( cost_dollars );
+  return ezmethod + ", " + to_string( machine_count ) + " " + human_readable + " => " + to_string( time_seconds ) + " secs for $" + to_string( cost_dollars );
 }
