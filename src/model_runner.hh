@@ -57,6 +57,8 @@ private:
     std::istream & stream() { return cpp_stream_; }
   };
   
+  const unsigned int method_;
+  const std::string node_;
   std::vector<Result> results_ {};
   POpen output_;
   
@@ -69,6 +71,8 @@ public:
 	       const double data_size_GB,
 	       const long int read_position_start,
 	       const long int read_size );
+
+  void collect_output();
 
   const std::vector<Result> & results() const { return results_; }
 };

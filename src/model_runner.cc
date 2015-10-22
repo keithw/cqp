@@ -50,29 +50,34 @@ ModelRunner::ModelRunner( const unsigned int method,
 			  const double data_size_GB,
 			  const long int read_position_start,
 			  const long int read_size )
-  : output_( join( { "cd models/models/method" + to_string( method ),
-	  "&&",
-	  "./point.R",
-	  "--machines", "../" + profile_filename,
-	  "--client", client,
-	  "--node", node,
-	  "--cluster-points", to_string( max_machine_count ),
-	  "--data", to_string( data_size_GB ),
-	  "--range-start", to_string( read_position_start ),
-	  "--range-size", to_string( read_size ) } ) )
+  : method_( method ),
+    node_( node ),
+    output_( join( { "cd models/models/method" + to_string( method ),
+	    "&&",
+	    "./point.R",
+	    "--machines", "../" + profile_filename,
+	    "--client", client,
+	    "--node", node,
+	    "--cluster-points", to_string( max_machine_count ),
+	    "--data", to_string( data_size_GB ),
+	    "--range-start", to_string( read_position_start ),
+	    "--range-size", to_string( read_size ) } ) )
 {
   if ( (method != 1) and (method != 2) and (method != 4) ) {
     throw runtime_error( string( "unknown method " ) + to_string( method ) );
   }
+}
 
+void ModelRunner::collect_output()
+{
   bool first_line = true;
   string line;
   while ( output_.stream().good() and getline( output_.stream(), line ) ) {
     if ( first_line ) {
-      Result::check_header( method, line );
+      Result::check_header( method_, line );
       first_line = false;
     } else {
-      results_.emplace_back( method, node, line );
+      results_.emplace_back( method_, node_, line );
     }
   }
 }
