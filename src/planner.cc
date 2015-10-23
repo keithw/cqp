@@ -94,6 +94,45 @@ void Planner::analyze() const
   cout << "Cheapest option: " << cheapest.str() << endl;
   cout << "Fastest option: " << fastest.str() << endl;
   cout << "Most bang for the buck: " << mostbang.str() << endl;
+
+  /* now graph the results */
+  
+  UniqueFile data_to_plot( "/tmp/drcloud_plot" );
+
+  for ( const auto method : { 1, 2, 4 } ) {
+    for ( const auto & x : results_ ) {
+      if ( static_cast<int>( x.method ) == method ) {
+	const string result_line = to_string( x.time_seconds ) + " " + to_string( x.cost_dollars ) + "\n";
+	data_to_plot.write( result_line );
+      }
+    }
+
+    data_to_plot.write( "\n\n" );
+  }
+
+  UniqueFile gnuplot_script( "/tmp/drcloud_gnuplot" );
+  gnuplot_script.write( "set xlabel 'time (s)'\n");
+  gnuplot_script.write( "set ylabel 'cost ($)'\n");
+  gnuplot_script.write( "set logscale xy\n" );
+
+  /* label the special points */
+  gnuplot_script.write( "set label 'Cheapest' at " + to_string( cheapest.time_seconds ) + ","
+			+ to_string( cheapest.cost_dollars ) + " boxed right offset -2,-2 point lt 6 ps 2.5\n" );
+  gnuplot_script.write( "set label 'Fastest' at " + to_string( fastest.time_seconds ) + ","
+			+ to_string( fastest.cost_dollars ) + " boxed right offset -2,-2 point lt 6 ps 2.5\n" );
+  if ( mostbang.str() != fastest.str()
+       and mostbang.str() != cheapest.str() ) {
+    gnuplot_script.write( "set label 'Best value' at " + to_string( mostbang.time_seconds ) + ","
+			  + to_string( mostbang.cost_dollars ) + " boxed right offset -2,-2 point lt 6 ps 2.5\n" );
+  }
+  
+  gnuplot_script.write( "plot \"" + data_to_plot.name() + "\" index 0 using 1:2 title \"LinearScan\", " );
+  gnuplot_script.write( "\"\" index 1 using 1:2 title \"LocalIndex\", " );
+  gnuplot_script.write( "\"\" index 2 using 1:2 title \"ShuffleAll\"\n" );
+
+  const string command = "gnuplot --persist " + gnuplot_script.name();
+  
+  SystemCall( "system", system( command.c_str() ) );
 }
 
 static string human_readable_machine_name( const string & machine_type )
@@ -112,38 +151,4 @@ string ModelRunner::Result::str() const
   string human_readable = human_readable_machine_name( machine_type );
   string ezmethod = method == 1 ? "LinearScan" : method == 2 ? "LocalIndex" : "ShuffleAll";
   return ezmethod + ", " + to_string( machine_count ) + " " + human_readable + " => " + to_string( time_seconds ) + " secs for $" + to_string( cost_dollars );
-}
-
-void Planner::graph() const
-{
-  if ( results_.empty() ) {
-    cerr << "No strategies available." << endl;
-    return;
-  }
-
-  UniqueFile data_to_plot( "/tmp/drcloud_plot" );
-
-  for ( const auto method : { 1, 2, 4 } ) {
-    for ( const auto & x : results_ ) {
-      if ( static_cast<int>( x.method ) == method ) {
-	const string result_line = to_string( x.time_seconds ) + " " + to_string( x.cost_dollars ) + "\n";
-	data_to_plot.write( result_line );
-      }
-    }
-
-    data_to_plot.write( "\n\n" );
-  }
-
-  UniqueFile gnuplot_script( "/tmp/drcloud_gnuplot" );
-  gnuplot_script.write( "set xlabel 'time (s)'\n");
-  gnuplot_script.write( "set ylabel 'cost ($)'\n");
-  gnuplot_script.write( "set logscale xy\n" );
-  
-  gnuplot_script.write( "plot \"" + data_to_plot.name() + "\" index 0 using 1:2 title \"LinearScan\", " );
-  gnuplot_script.write( "\"\" index 1 using 1:2 title \"LocalIndex\", " );
-  gnuplot_script.write( "\"\" index 2 using 1:2 title \"ShuffleAll\"\n" );
-
-  const string command = "gnuplot --persist " + gnuplot_script.name();
-  
-  SystemCall( "system", system( command.c_str() ) );
 }
