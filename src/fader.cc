@@ -81,6 +81,7 @@ void GTKFader::recompute()
   /* XXX can only be called from Gtk thread and is not reentrant */
 
   /* reconcile sliders */
+  /*
   while ( state_.range_end < state_.range_start ) {
     state_.range_end = state_.range_end + 1;
     state_.range_start = state_.range_start - 1;
@@ -88,14 +89,14 @@ void GTKFader::recompute()
     range_end_slider_->set_value( state_.range_end );
     range_start_slider_->set_value( state_.range_start );
   }
+  */
 
   /* calculate total data size */
   const string data_size = human_byte_count( state_.record_size * state_.num_records );
   const string result_size = human_byte_count( state_.record_size * state_.num_records
 					       * ( state_.range_end - state_.range_start ) / 100.0 );
 
-  text_->set_markup( "<span size='large'><span color='darkred'><b>data size:</b> " + data_size + "</span>"
-		     + ", <span color='darkblue'><b>result size:</b> " + result_size + "</span></span>" );
+  text_->set_markup( "<span size='large'><span color='darkred'>Job: CDF</span>, <span color='darkblue'><b>data size:</b> " + data_size + "</span></span>" );
   
   /* increment version number */
   tracker_.mark_event();
@@ -138,7 +139,7 @@ GTKFader::GTKFader()
       stack.pack_start( numeric );
 
       text_ = make_unique<Gtk::Label>();
-      record_size_slider_ = make_unique<LabeledScale>( numeric, *this, "<b>record size</b> (bytes)", 1, 200, 1, state_.record_size );
+      record_size_slider_ = make_unique<LabeledScale>( numeric, *this, "<b>mean record size</b> (bytes)", 1, 200, 1, state_.record_size );
       num_records_slider_ = make_unique<LabeledScale>( numeric, *this, "<b>record count</b>", 1, 1e11, 1e7, state_.num_records );
       range_start_slider_ = make_unique<LabeledScale>( numeric, *this, "<b>range start</b> (%)", 0, 100.9, 1, state_.range_start );
       range_end_slider_   = make_unique<LabeledScale>( numeric, *this, "<b>range end</b> (%)",   0, 100.9, 1, state_.range_end );

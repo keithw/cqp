@@ -59,7 +59,7 @@ void Planner::set_input( const Input & input )
 
   results_.clear();
   for ( const auto & x : all_results ) {
-    if ( x.operation == "nth" ) {
+    if ( x.operation == "cdf" ) {
       results_.push_back( x );
     }
   }
@@ -150,5 +150,8 @@ string ModelRunner::Result::str() const
 {
   string human_readable = human_readable_machine_name( machine_type );
   string ezmethod = method == 1 ? "LinearScan" : method == 2 ? "LocalIndex" : "ShuffleAll";
-  return ezmethod + ", " + to_string( machine_count ) + " " + human_readable + " => " + to_string( time_seconds ) + " secs for $" + to_string( cost_dollars );
+  char tmp[ 128 ];
+  snprintf( tmp, 128, "%s on %d instances of %s (%.0f seconds for $%.02f)",
+	    ezmethod.c_str(), machine_count, human_readable.c_str(), time_seconds, cost_dollars );
+  return tmp;
 }
