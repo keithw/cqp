@@ -93,7 +93,7 @@ void Planner::analyze() const
 
   cout << "Cheapest option: " << cheapest.str() << endl;
   cout << "Fastest option: " << fastest.str() << endl;
-  cout << "Most bang for the buck: " << mostbang.str() << endl;
+  cout << "Best value: " << mostbang.str() << endl;
 
   /* now graph the results */
   
